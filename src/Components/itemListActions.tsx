@@ -23,7 +23,7 @@ export function ItemListActions(){
                     variant="contained"
                     onClick={() => {
                         resetSelection();
-                        toggleNew();
+                        toggleNew(true);
                     }}
                     startIcon={<Add/>}
                     color='info'

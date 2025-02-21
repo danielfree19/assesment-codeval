@@ -12,7 +12,7 @@ interface Store {
     maxPerPage: number;
     new: boolean;
 
-    toggleNew: () => void;
+    toggleNew: (flag: boolean) => void;
     getItems: () => void;
     getItem: (id: Item['id']) => Item;
     getNewId: () => Item['id'];
@@ -51,7 +51,7 @@ const useStore = create<Store>()(
     maxPerPage: 5,
     new: false,
 
-    toggleNew: () => set(state => ({new: !state.new})),
+    toggleNew: (flag: boolean = false) => set({new: flag}),
     getItems: ()=>{
         if (get().items.length > 0){
             const items = get().items;
