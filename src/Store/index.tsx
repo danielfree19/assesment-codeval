@@ -90,7 +90,6 @@ const useStore = create<Store>()(
         }))
     },
     addItem: (item: Item) => {
-        console.log(item)
         set(state => ({
             items: [
                 ...state.items, 

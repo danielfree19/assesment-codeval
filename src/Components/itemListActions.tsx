@@ -15,7 +15,6 @@ export function ItemListActions(){
     } = useStore();
 
     const handleChange = (e: SelectChangeEvent) => {
-        console.log(e.target.value, 'blat')
         setSortBy(e.target.value);
     }
     return (
