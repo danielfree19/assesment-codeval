@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, CardHeader, CardMedia, styled, TextField } from "@mui/material";
+import { Button, Card, CardContent, CardHeader, CardMedia, styled, TextField, Alert } from "@mui/material";
 import useStore from "../Store";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { Item } from "../dummy";
@@ -8,13 +8,59 @@ interface ItemBoxProps {
     newItem: boolean
 }
 
+interface ValidationErrors {
+    name?: string;
+    description?: string;
+    price?: string;
+}
+
 /**
- * id unique
- * name length 30
- * description length 200 optional
- * price larger then 0
- * date
+ * Validation rules:
+ * - id: unique
+ * - name: required, 1-30 characters
+ * - description: optional, max 200 characters
+ * - price: required, positive number, max 999999
  */
+
+const validateItem = (item: Item, existingItems: Item[], isNew: boolean): ValidationErrors => {
+    const errors: ValidationErrors = {};
+    
+    // Name validation
+    if (!item.name.trim()) {
+        errors.name = "Name is required";
+    } else if (item.name.length > 30) {
+        errors.name = "Name must be 30 characters or less";
+    } else if (item.name.length < 2) {
+        errors.name = "Name must be at least 2 characters";
+    }
+    
+    // Check for duplicate names (excluding current item)
+    if (item.name.trim()) {
+        const isDuplicate = existingItems.some(existingItem => 
+            existingItem.name.toLowerCase() === item.name.toLowerCase() && 
+            (isNew || existingItem.id !== item.id)
+        );
+        if (isDuplicate) {
+            errors.name = "An item with this name already exists";
+        }
+    }
+    
+    // Description validation
+    if (item.description.length > 200) {
+        errors.description = "Description must be 200 characters or less";
+    }
+    
+    // Price validation
+    if (item.price <= 0) {
+        errors.price = "Price must be greater than 0";
+    } else if (item.price > 999999) {
+        errors.price = "Price cannot exceed 999,999";
+    } else if (isNaN(item.price)) {
+        errors.price = "Price must be a valid number";
+    }
+    
+    return errors;
+};
 
 export default function ItemBox(props: ItemBoxProps) {
     const { id, newItem } = props;
@@ -29,7 +75,8 @@ export default function ItemBox(props: ItemBoxProps) {
         addItem,
         updateItem,
         toggleNew,
-        resetSelection
+        resetSelection,
+        items
     } = useStore();
     
     const initialItem = useMemo(()=>({
@@ -41,6 +88,8 @@ export default function ItemBox(props: ItemBoxProps) {
     }),[]);
 
     const [item, setItem] = useState<Item>(initialItem);
+    const [errors, setErrors] = useState<ValidationErrors>({});
+    const [touched, setTouched] = useState<{[key: string]: boolean}>({});
 
     useEffect(()=>{
         if (newItem !== undefined && newItem === false){
@@ -53,45 +102,51 @@ export default function ItemBox(props: ItemBoxProps) {
         }
     },[getItem, id, initialItem, newItem]);
 
+    // Real-time validation
+    useEffect(() => {
+        const validationErrors = validateItem(item, items, newItem);
+        setErrors(validationErrors);
+    }, [item, items, newItem]);
+
     const handleChangeName = (event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const name = event.target.value;
-        if (name.length >= 30)
-            return;
-        setItem((prevItem) => 
-            ({
-                ...prevItem,
-                name
-            })
-        );
+        setItem((prevItem) => ({
+            ...prevItem,
+            name
+        }));
+        setTouched(prev => ({ ...prev, name: true }));
     }
 
     const handleChangeDesc = (event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const description = event.target.value;
-        if(description.length === 200 )  
-            return;
-        setItem((prevItem) => 
-            ({
-                ...prevItem,
-                description
-            })
-        );
+        setItem((prevItem) => ({
+            ...prevItem,
+            description
+        }));
+        setTouched(prev => ({ ...prev, description: true }));
     }
 
     const handleChangePrice = (event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        const price = parseFloat(event.target.value);
-        if (price < 0) 
-            return
-        setItem((prevItem) => 
-            ({
-                ...prevItem,
-                price
-            })
-        );
+        const price = parseFloat(event.target.value) || 0;
+        setItem((prevItem) => ({
+            ...prevItem,
+            price
+        }));
+        setTouched(prev => ({ ...prev, price: true }));
     }
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         
+        // Mark all fields as touched
+        setTouched({ name: true, description: true, price: true });
+        
+        // Check if there are any validation errors
+        const validationErrors = validateItem(item, items, newItem);
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
         
         if(newItem){
             const itemToSend: Item = {
@@ -100,14 +155,18 @@ export default function ItemBox(props: ItemBoxProps) {
                 id: getNewId()
             }
             addItem(itemToSend);
-            toggleNew();
-
-        }
-        else 
+            toggleNew(false);
+        } else {
             updateItem(item);
+        }
+        
         resetSelection();
         setItem(initialItem);
+        setTouched({});
+        setErrors({});
     }
+
+    const hasErrors = Object.keys(errors).length > 0;
 
     return (
         <Card 
@@ -120,7 +179,12 @@ export default function ItemBox(props: ItemBoxProps) {
             <CardMedia>
                 <Image src="https://placehold.co/250x150" alt="placeholder image"/>
             </CardMedia>
-            <CardContent >
+            <CardContent>
+                {hasErrors && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        Please fix the errors below before saving.
+                    </Alert>
+                )}
                 <form className="CardForm" onSubmit={handleSubmit}>
                     <TextField 
                         id="name" 
@@ -128,6 +192,11 @@ export default function ItemBox(props: ItemBoxProps) {
                         variant="outlined" 
                         onChange={handleChangeName}
                         value={item.name}
+                        error={touched.name && !!errors.name}
+                        helperText={touched.name && errors.name}
+                        required
+                        fullWidth
+                        margin="normal"
                     />
                     <TextField 
                         id="description" 
@@ -137,6 +206,10 @@ export default function ItemBox(props: ItemBoxProps) {
                         minRows={3}
                         onChange={handleChangeDesc}
                         value={item.description}
+                        error={touched.description && !!errors.description}
+                        helperText={touched.description ? errors.description || `${item.description.length}/200 characters` : ''}
+                        fullWidth
+                        margin="normal"
                     />
                     <TextField 
                         id="price" 
@@ -145,11 +218,19 @@ export default function ItemBox(props: ItemBoxProps) {
                         type="number"
                         onChange={handleChangePrice}
                         value={item.price}
+                        error={touched.price && !!errors.price}
+                        helperText={touched.price && errors.price}
+                        required
+                        fullWidth
+                        margin="normal"
+                        inputProps={{ min: 0, step: 0.01 }}
                     />
                     <Button 
                         type="submit" 
                         variant="contained"
-                        disabled={item.price <= 0 || item.name.length === 0}
+                        disabled={hasErrors}
+                        fullWidth
+                        sx={{ mt: 2 }}
                     >
                         Save
                     </Button>
