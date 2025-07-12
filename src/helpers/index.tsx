@@ -25,8 +25,9 @@ export function sortSelect(sortBy: string) {
     switch (sortBy) {
         case 'name':
             return sortByName;
-        case 'Recently Added':
-            return sortByDate
-
+        case 'date':
+            return sortByDate;
+        default:
+            return sortByName;
     }
 }

@@ -29,10 +29,10 @@ interface Store {
     setSortBy: (sort: string) => void;
 }
 
-const unkownItem: Item = {
+const unknownItem: Item = {
     id: -1,
     name: 'Item not found',
-    description: 'somehow you stumbled uppon a non existent item',
+    description: 'somehow you stumbled upon a non existent item',
     price: -1,
     createDate: new Date()
 };
@@ -53,26 +53,21 @@ const useStore = create<Store>()(
 
     toggleNew: (flag: boolean = false) => set({new: flag}),
     getItems: ()=>{
-        if (get().items.length > 0){
-            const items = get().items;
+        if (get().items.length === 0) {
             set({
-                items: items.map((item) => ({
-                    ...item,
-                })),
-            maxPage: Math.floor((get().items.length - 1) / get().maxPerPage)     
-            })
+                items: data,
+                maxPage: Math.floor((data.length - 1) / get().maxPerPage) 
+            });
+        } else {
+            set({
+                maxPage: Math.floor((get().items.length - 1) / get().maxPerPage)     
+            });
         }
-            
-        else
-        set({
-            items: get().items.length > 0  ? get().items : data,
-            maxPage: Math.floor(((get().items.length > 0 ? get().items.length : data.length) - 1) / get().maxPerPage) 
-        })
     },
     getItem: (id: number): Item => {
         const items = get().items;
         const selectedItem = items.find(item => item.id === id);
-        return selectedItem === undefined ? unkownItem : selectedItem;
+        return selectedItem === undefined ? unknownItem : selectedItem;
     },
     getNewId: () => {
         return get().items.length + 1
@@ -85,8 +80,8 @@ const useStore = create<Store>()(
     },
     deleteItem: (id: Item['id']) => {
         set(state => ({
-            items: state.items.filter(item => item.id != id),
-            maxPage: Math.floor((state.items.filter(item => item.id != id).length - 1) / get().maxPerPage)
+            items: state.items.filter(item => item.id !== id),
+            maxPage: Math.floor((state.items.filter(item => item.id !== id).length - 1) / get().maxPerPage)
         }))
     },
     addItem: (item: Item) => {
@@ -101,7 +96,7 @@ const useStore = create<Store>()(
     updateItem: (newItem: Item) => {
         set(state => ({
             items: [
-                ...state.items.filter(item => item.id != newItem.id),
+                ...state.items.filter(item => item.id !== newItem.id),
                 newItem
             ]
         }))

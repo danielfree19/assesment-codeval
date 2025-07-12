@@ -31,7 +31,7 @@ const data:Array<Item> = [
     {
         id: 4,
         name: 'Xbox one',
-        description: 'gaming console 4rd gen by microsoft',
+        description: 'gaming console 4th gen by microsoft',
         price: 3000.0,
         createDate: new Date('2018-03-15 20:20:00')
     },

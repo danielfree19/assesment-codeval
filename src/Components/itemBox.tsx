@@ -67,7 +67,7 @@ export default function ItemBox(props: ItemBoxProps) {
 
     const handleChangeDesc = (event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const description = event.target.value;
-        if(description.length == 200 )  
+        if(description.length === 200 )  
             return;
         setItem((prevItem) => 
             ({
@@ -149,7 +149,7 @@ export default function ItemBox(props: ItemBoxProps) {
                     <Button 
                         type="submit" 
                         variant="contained"
-                        disabled={item.price <= 0 || item.name.length == 0}
+                        disabled={item.price <= 0 || item.name.length === 0}
                     >
                         Save
                     </Button>

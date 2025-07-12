@@ -1,7 +1,7 @@
 import { ThemeProvider } from "@emotion/react";
 import { CssBaseline } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallback from "./errorBoundry";
+import ErrorFallback from "./errorBoundary";
 import theme from "./theme";
 import Main from "./Pages/main";
 import { useEffect } from "react";
@@ -14,7 +14,7 @@ const App = () => {
   // load items on page load
   useEffect(() => {
     store.getItems()
-  },[]);
+  },[store]);
 
   return (
     <ErrorBoundary

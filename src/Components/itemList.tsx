@@ -88,7 +88,7 @@ export default function ItemList() {
                             <Box 
                                 onClick={()=>{
                                     selectItem(item.id);
-                                    toggleNew();
+                                    toggleNew(false);
                                 }} 
                                 sx={{ display: 'flex', flexDirection: 'column' }}
                             >
@@ -116,7 +116,7 @@ export default function ItemList() {
                 <Button 
                     startIcon={<NavigateBefore/>} 
                     onClick={()=>prevPage()}
-                    disabled={page == 0}
+                    disabled={page === 0}
                 >
                      Prev Page 
                 </Button>
@@ -126,7 +126,7 @@ export default function ItemList() {
                 <Button 
                     endIcon={<NavigateNext/>} 
                     onClick={()=>nextPage()}
-                    disabled={maxPage == page}
+                    disabled={maxPage === page}
                 >
                     Next Page
                 </Button>
